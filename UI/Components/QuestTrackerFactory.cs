@@ -6,12 +6,12 @@ namespace LiveSplit.UI.Components
     public class QuestTrackerFactory : IComponentFactory
     {
         // The displayed name of the component in the Layout Editor.
-        public string ComponentName => "All Quests Tracker";
+        public string ComponentName => "The Hobbit - All Quests Tracker";
 
-        public string Description => "Displays if All Quests have been done during the run.";
+        public string Description => "A tool for The Hobbit that verifies if All Quests have been successfully completed during the run.";
 
         // The sub-menu this component will appear under when adding the component to the layout.
-        public ComponentCategory Category => ComponentCategory.Information;
+        public ComponentCategory Category => ComponentCategory.Control;
 
         public IComponent Create(LiveSplitState state) => new QuestTrackerComponent(state);
 
@@ -27,6 +27,6 @@ namespace LiveSplit.UI.Components
         // GitHub or somewhere, you can ignore this.
         public string XMLURL => UpdateURL + "";
 
-        public Version Version => Version.Parse("1.0.0");
+        public Version Version => Version.Parse("2.0.0");
     }
 }

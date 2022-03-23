@@ -1,35 +1,38 @@
 ﻿using LiveSplit.Model;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Drawing;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Diagnostics;
+using LiveSplit.UI.Util;
 
 namespace LiveSplit.UI.Components
 {
     public class QuestTrackerComponent : IComponent
     {
-        const int PROCESS_WM_READ = 0x0010;
-
-        [DllImport("kernel32.dll")]
-        public static extern IntPtr OpenProcess(int dwDesiredAccess, bool bInheritHandle, int dwProcessId);
-
-        [DllImport("kernel32.dll")]
-        public static extern bool ReadProcessMemory(int hProcess, int lpBaseAddress, byte[] lpBuffer, int dwSize);
-        // This internal component does the actual heavy lifting. Whenever we want to do something
-        // like display text, we will call the appropriate function on the internal component.
         protected InfoTextComponent InternalComponent { get; set; }
         // This is how we will access all the settings that the user has set.
         public QuestTrackerSettings Settings { get; set; }
         // This object contains all of the current information about the splits, the timer, etc.
         protected LiveSplitState CurrentState { get; set; }
 
-        private string status = "Waiting...";
+        private MemoryReader MemoryReader { get; set; }
+
+        private string status = "Waiting for game to start...";
+
         private Color statusColor = Color.White;
 
-        public string ComponentName => "All Quests Tracker";
+        private string missedQuestsAddress = "0x35C094";
+
+        private string oolStateAddress = "0x362B58";
+
+        private bool questsCounted;
+
+        private bool closed;
+
+        public string ComponentName => "The Hobbit - All Quests Tracker";
 
         public float HorizontalWidth => InternalComponent.HorizontalWidth;
         public float MinimumWidth => InternalComponent.MinimumWidth;
@@ -49,16 +52,19 @@ namespace LiveSplit.UI.Components
         // already added.
         public QuestTrackerComponent(LiveSplitState state)
         {
-            InternalComponent = new InfoTextComponent("All Quests Tracker", null);
+            InternalComponent = new InfoTextComponent("The Hobbit - All Quests Tracker", null);
             Settings = new QuestTrackerSettings();
+
+            MemoryReader = new MemoryReader();
+
+            CurrentState = state;
 
             state.OnStart += state_OnStart;
             state.OnReset += state_OnReset;
             state.OnSplit += state_OnSplit;
-            CurrentState = state;
         }
 
-            public void DrawHorizontal(Graphics g, LiveSplitState state, float height, Region clipRegion)
+        public void DrawHorizontal(Graphics g, LiveSplitState state, float height, Region clipRegion)
         {
             InternalComponent.NameLabel.HasShadow
                 = InternalComponent.ValueLabel.HasShadow
@@ -73,11 +79,16 @@ namespace LiveSplit.UI.Components
         // We will be adding the ability to display the component across two rows in our settings menu.
         public void DrawVertical(Graphics g, LiveSplitState state, float width, Region clipRegion)
         {
-            InternalComponent.DisplayTwoRows = Settings.Display2Rows;
+            InternalComponent.DisplayTwoRows = true;
 
             InternalComponent.NameLabel.HasShadow
                 = InternalComponent.ValueLabel.HasShadow
                 = state.LayoutSettings.DropShadows;
+
+            InternalComponent.NameLabel.HorizontalAlignment = StringAlignment.Center;
+            InternalComponent.ValueLabel.HorizontalAlignment = StringAlignment.Center;
+            InternalComponent.NameLabel.VerticalAlignment = StringAlignment.Center;
+            InternalComponent.ValueLabel.VerticalAlignment = StringAlignment.Center;
 
             InternalComponent.NameLabel.ForeColor = state.LayoutSettings.TextColor;
             InternalComponent.ValueLabel.ForeColor = statusColor;
@@ -106,62 +117,68 @@ namespace LiveSplit.UI.Components
         // thousands of times per second.
         public void Update(IInvalidator invalidator, LiveSplitState state, float width, float height, LayoutMode mode)
         {
-            InternalComponent.InformationValue = status;
-            InternalComponent.Update(invalidator, state, width, height, mode);
-        }
-
-        void state_OnStart(object sender, EventArgs e)
-        {
-            statusColor = Color.Turquoise;
-            status = "In progress...";
-        }
-
-        void state_OnReset(object sender, TimerPhase e)
-        {
-            statusColor = Color.White;
-            status = "Waiting...";
-        }
-
-        void state_OnSplit(object sender, EventArgs e)
-        {
-            if(CurrentState.CurrentPhase == TimerPhase.Ended)
+            Process[] processes = Process.GetProcessesByName("meridian");
+            if (closed && processes.Length > 0)
             {
-                Task.Factory.StartNew(() => EndCheck());
+                closed = false;
+                statusColor = Color.White;
+                status = "Waiting for run to start...";
+            }
+            else
+            {
+                if (processes.Length == 0)
+                {
+                    closed = true;
+                    statusColor = Color.White;
+                    status = "-";
+                }
+
+                if (CurrentState.CurrentPhase == TimerPhase.Ended && !questsCounted)
+                {
+                    byte[] stateMem = MemoryReader.ReadMemory("meridian", MemoryReader.ConstructPointer(oolStateAddress), true);
+                    if (stateMem != null)
+                    {
+                        int oolState = MemReaderUtil.ConvertMemory(stateMem, MemType.INT);
+                        if (oolState == 12)
+                        {
+                            questsCounted = true;
+                            byte[] questMem = MemoryReader.ReadMemory("meridian", MemoryReader.ConstructPointer(missedQuestsAddress), true);
+                            if (questMem != null)
+                            {
+                                int missedQuestsCount = MemReaderUtil.ConvertMemory(questMem, MemType.FLOAT);
+                                bool missedQuests = missedQuestsCount > 0 ? true : false;
+
+                                if (missedQuests) { status = $"Run Invalid, missed {missedQuestsCount} quests!"; statusColor = Color.Red; }
+                                else { status = "Run Valid, All Quests Acquired!"; statusColor = Color.LimeGreen; }
+                            }
+                        }
+                    }
+                }
+
+                InternalComponent.InformationValue = status;
+                InternalComponent.Update(invalidator, state, width, height, mode);
             }
         }
 
-        private async void EndCheck()
+        private void state_OnStart(object sender, EventArgs e)
         {
-            Process process = Process.GetProcessesByName("meridian")[0];
-            IntPtr processHandle = OpenProcess(PROCESS_WM_READ, false, process.Id);
+            questsCounted = false;
+            statusColor = Color.Gold;
+            status = "Run currently in progress...";
+        }
 
-            bool run = true;
+        private void state_OnReset(object sender, TimerPhase e)
+        {
+            statusColor = Color.White;
+            status = "Waiting for run to start...";
+        }
 
-            int questAddress = 0x0075C094;
-            int stateAddress = 0x00762B58;
-
-            while (run)
+        private void state_OnSplit(Object sender, EventArgs e)
+        {
+            if(CurrentState.CurrentPhase == TimerPhase.Ended)
             {
-                byte[] stateBuffer = new byte[4];
-
-                ReadProcessMemory((int)processHandle, stateAddress, stateBuffer, stateBuffer.Length);
-
-                int state = BitConverter.ToInt32(stateBuffer, 0);
-
-                if (state == 12)
-                {
-                    await Task.Delay(1500);
-                    byte[] questBuffer = new byte[4];
-                    ReadProcessMemory((int)processHandle, questAddress, questBuffer, questBuffer.Length);
-                    float missedQuestsCount = BitConverter.ToSingle(questBuffer, 0);
-                    bool missedQuests = missedQuestsCount > 0 ? true : false;
-
-                    if (missedQuests) { status = $"Run Invalid, missed {missedQuestsCount} quests!"; statusColor = Color.Red; }
-                    else { status = "All Quests Acquired!"; statusColor = Color.Green; }
-                    run = false;
-                }
-
-                await Task.Delay(3000);
+                statusColor = Color.CadetBlue;
+                status = "Run Complete! Skip end cinema for final count.";
             }
         }
 
@@ -171,6 +188,7 @@ namespace LiveSplit.UI.Components
         {
             CurrentState.OnStart -= state_OnStart;
             CurrentState.OnReset -= state_OnReset;
+            CurrentState.OnSplit -= state_OnSplit;
         }
 
         // I do not know what this is for.

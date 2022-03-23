@@ -19,15 +19,15 @@ namespace LiveSplit.UI.Components
         {
             if (Mode == LayoutMode.Horizontal)
             {
-                chkTwoRows.Enabled = false;
-                chkTwoRows.DataBindings.Clear();
-                chkTwoRows.Checked = true;
+                //chkTwoRows.Enabled = false;
+                //chkTwoRows.DataBindings.Clear();
+                //chkTwoRows.Checked = true;
             }
             else
             {
-                chkTwoRows.Enabled = true;
-                chkTwoRows.DataBindings.Clear();
-                chkTwoRows.DataBindings.Add("Checked", this, "Display2Rows", false, DataSourceUpdateMode.OnPropertyChanged);
+                //chkTwoRows.Enabled = true;
+                //chkTwoRows.DataBindings.Clear();
+                //chkTwoRows.DataBindings.Add("Checked", this, "Display2Rows", false, DataSourceUpdateMode.OnPropertyChanged);
             }
         }
         private int CreateSettingsNode(XmlDocument document, XmlElement parent)

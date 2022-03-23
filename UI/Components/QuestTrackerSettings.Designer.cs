@@ -30,8 +30,6 @@ namespace LiveSplit.UI.Components
         private void InitializeComponent()
         {
             this.topLevelLayoutPanel = new System.Windows.Forms.TableLayoutPanel();
-            this.chkTwoRows = new System.Windows.Forms.CheckBox();
-            this.topLevelLayoutPanel.SuspendLayout();
             this.SuspendLayout();
             // 
             // topLevelLayoutPanel
@@ -40,7 +38,6 @@ namespace LiveSplit.UI.Components
             this.topLevelLayoutPanel.ColumnCount = 1;
             this.topLevelLayoutPanel.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
             this.topLevelLayoutPanel.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
-            this.topLevelLayoutPanel.Controls.Add(this.chkTwoRows, 0, 0);
             this.topLevelLayoutPanel.Location = new System.Drawing.Point(0, 0);
             this.topLevelLayoutPanel.Name = "topLevelLayoutPanel";
             this.topLevelLayoutPanel.RowCount = 2;
@@ -48,17 +45,6 @@ namespace LiveSplit.UI.Components
             this.topLevelLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50F));
             this.topLevelLayoutPanel.Size = new System.Drawing.Size(200, 100);
             this.topLevelLayoutPanel.TabIndex = 0;
-            // 
-            // chkTwoRows
-            // 
-            this.chkTwoRows.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
-            this.chkTwoRows.AutoSize = true;
-            this.chkTwoRows.Location = new System.Drawing.Point(3, 16);
-            this.chkTwoRows.Name = "chkTwoRows";
-            this.chkTwoRows.Size = new System.Drawing.Size(194, 17);
-            this.chkTwoRows.TabIndex = 0;
-            this.chkTwoRows.Text = "Display 2 Rows";
-            this.chkTwoRows.UseVisualStyleBackColor = true;
             // 
             // QuestTrackerSettings
             // 
@@ -69,8 +55,6 @@ namespace LiveSplit.UI.Components
             this.Name = "QuestTrackerSettings";
             this.Size = new System.Drawing.Size(203, 103);
             this.Load += new System.EventHandler(this.QuestTrackerSettings_Load);
-            this.topLevelLayoutPanel.ResumeLayout(false);
-            this.topLevelLayoutPanel.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -79,6 +63,5 @@ namespace LiveSplit.UI.Components
         #endregion
 
         private System.Windows.Forms.TableLayoutPanel topLevelLayoutPanel;
-        private System.Windows.Forms.CheckBox chkTwoRows;
     }
 }
