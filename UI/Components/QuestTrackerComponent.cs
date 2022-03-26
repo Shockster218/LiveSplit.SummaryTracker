@@ -28,9 +28,9 @@ namespace LiveSplit.UI.Components
 
         private string oolStateAddress = "0x362B58";
 
-        private bool questsCounted;
-
         private bool closed;
+
+        private bool runComplete;
 
         public string ComponentName => "The Hobbit - All Quests Tracker";
 
@@ -129,11 +129,12 @@ namespace LiveSplit.UI.Components
                 if (processes.Length == 0)
                 {
                     closed = true;
+                    runComplete = false;
                     statusColor = Color.White;
                     status = "-";
                 }
 
-                if (CurrentState.CurrentPhase == TimerPhase.Ended && !questsCounted)
+                if (runComplete)
                 {
                     byte[] stateMem = MemoryReader.ReadMemory("meridian", MemoryReader.ConstructPointer(oolStateAddress), true);
                     if (stateMem != null)
@@ -141,7 +142,6 @@ namespace LiveSplit.UI.Components
                         int oolState = MemReaderUtil.ConvertMemory(stateMem, MemType.INT);
                         if (oolState == 12)
                         {
-                            questsCounted = true;
                             byte[] questMem = MemoryReader.ReadMemory("meridian", MemoryReader.ConstructPointer(missedQuestsAddress), true);
                             if (questMem != null)
                             {
@@ -162,21 +162,22 @@ namespace LiveSplit.UI.Components
 
         private void state_OnStart(object sender, EventArgs e)
         {
-            questsCounted = false;
             statusColor = Color.Gold;
             status = "Run currently in progress...";
         }
 
         private void state_OnReset(object sender, TimerPhase e)
         {
+            runComplete = false;
             statusColor = Color.White;
             status = "Waiting for run to start...";
         }
 
         private void state_OnSplit(Object sender, EventArgs e)
         {
-            if(CurrentState.CurrentPhase == TimerPhase.Ended)
+            if(CurrentState.CurrentPhase == TimerPhase.Ended && CurrentState.CurrentSplitIndex == CurrentState.Run.Count)
             {
+                runComplete = true;
                 statusColor = Color.CadetBlue;
                 status = "Run Complete! Skip end cinema for final count.";
             }
