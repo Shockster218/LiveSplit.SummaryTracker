@@ -28,8 +28,6 @@ namespace LiveSplit.UI.Components
 
         private MemoryReader MemoryReader { get; set; }
 
-        private string status = "-";
-
         private Color statusColor = Color.White;
 
         private string missedQuestsAddress = "0x35C094";
@@ -126,12 +124,14 @@ namespace LiveSplit.UI.Components
             Process[] processes = Process.GetProcessesByName("meridian");
             if (closed && processes.Length > 0)
             {
+                runComplete = false;
                 closed = false;
                 statusColor = Color.White;
                 runState = RunState.WAITING;
             }
             else
             {
+                if (runState == RunState.GAMENOTSTARTED) runState = RunState.WAITING;
                 if (processes.Length == 0)
                 {
                     closed = true;
@@ -143,8 +143,7 @@ namespace LiveSplit.UI.Components
                     else
                     {
                         statusColor = Color.White;
-                        runComplete = true;
-                        status = "-";
+                        runState = RunState.GAMENOTSTARTED;
                     }
                 }
 
@@ -213,7 +212,7 @@ namespace LiveSplit.UI.Components
 
         private void state_OnSplit(Object sender, EventArgs e)
         {
-            if(CurrentState.CurrentPhase == TimerPhase.Ended && CurrentState.CurrentSplitIndex == CurrentState.Run.Count && !runComplete)
+            if(CurrentState.CurrentPhase == TimerPhase.Ended && CurrentState.CurrentSplitIndex >= CurrentState.Run.Count && !runComplete)
             {
                 runComplete = true;
                 statusColor = Color.CadetBlue;
