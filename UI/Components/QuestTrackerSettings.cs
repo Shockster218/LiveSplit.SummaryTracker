@@ -7,33 +7,37 @@ namespace LiveSplit.UI.Components
 {
     public partial class QuestTrackerSettings : UserControl
     {
-        public bool Display2Rows { get; set; }
+        public bool LiteMode { get; set; }
+        public bool AutoReset { get; set; }
         public LayoutMode Mode { get; set; }
         public QuestTrackerSettings()
         {
-            Display2Rows = false;
             InitializeComponent();
+            LiteMode = false;
+            AutoReset = true;
         }
 
         private void QuestTrackerSettings_Load(object sender, EventArgs e)
         {
+            Checkbox_LiteMode.DataBindings.Clear();
+            Checkbox_AutoReset.DataBindings.Clear();
+
             if (Mode == LayoutMode.Horizontal)
             {
-                //chkTwoRows.Enabled = false;
-                //chkTwoRows.DataBindings.Clear();
-                //chkTwoRows.Checked = true;
+                Checkbox_LiteMode.Enabled = false;
             }
             else
             {
-                //chkTwoRows.Enabled = true;
-                //chkTwoRows.DataBindings.Clear();
-                //chkTwoRows.DataBindings.Add("Checked", this, "Display2Rows", false, DataSourceUpdateMode.OnPropertyChanged);
+                Checkbox_LiteMode.DataBindings.Add("Checked", this, "LiteMode", false, DataSourceUpdateMode.OnPropertyChanged);
             }
+
+            Checkbox_AutoReset.DataBindings.Add("Checked", this, "AutoReset", false, DataSourceUpdateMode.OnPropertyChanged);
         }
         private int CreateSettingsNode(XmlDocument document, XmlElement parent)
         {
-            return SettingsHelper.CreateSetting(document, parent, "Version", "1.0") ^
-                SettingsHelper.CreateSetting(document, parent, "Display2Rows", Display2Rows);
+            return SettingsHelper.CreateSetting(document, parent, "Version", "2.0") ^
+                SettingsHelper.CreateSetting(document, parent, "LiteMode", LiteMode) ^
+                SettingsHelper.CreateSetting(document, parent, "AutoReset", AutoReset);
         }
         public XmlNode GetSettings(XmlDocument document)
         {
@@ -50,7 +54,8 @@ namespace LiveSplit.UI.Components
         public void SetSettings(XmlNode node)
         {
             var element = (XmlElement)node;
-            Display2Rows = SettingsHelper.ParseBool(element["Display2Rows"], false);
+            LiteMode = SettingsHelper.ParseBool(element["LiteMode"]);
+            AutoReset = SettingsHelper.ParseBool(element["AutoReset"]);
         }
     }
 }
