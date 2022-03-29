@@ -10,16 +10,6 @@ namespace LiveSplit.UI.Components
 {
     public class QuestTrackerComponent : IComponent
     {
-        private enum RunState
-        {
-            GAMENOTSTARTED,
-            CRASHED,
-            WAITING,
-            RUNNING,
-            FINISHED,
-            COUNTED
-        }
-
         protected InfoTextComponent InternalComponent { get; set; }
 
         public QuestTrackerSettings Settings { get; set; }
@@ -34,6 +24,8 @@ namespace LiveSplit.UI.Components
 
         private string oolStateAddress = "0x362B58";
 
+        private string currentLevelAddress = "0x362B5C";
+
         private bool closed;
 
         private bool runComplete;
@@ -41,6 +33,8 @@ namespace LiveSplit.UI.Components
         private RunState runState = RunState.GAMENOTSTARTED;
 
         private int missedQuestsCount;
+
+        private RunDetails runDetails;
 
         public string ComponentName => "The Hobbit - All Quests Tracker";
 
@@ -62,6 +56,7 @@ namespace LiveSplit.UI.Components
             InternalComponent = new InfoTextComponent("", null);
 
             MemoryReader = new MemoryReader();
+            runDetails = new RunDetails("placeholder");
 
             CurrentState = state;
 
@@ -149,7 +144,7 @@ namespace LiveSplit.UI.Components
 
                 if (runComplete)
                 {
-                    CheckQuests();
+                    EndOfRunQuestCheck();
                 }
 
                 InternalComponent.InformationValue = SetInformationText();
@@ -157,7 +152,7 @@ namespace LiveSplit.UI.Components
             }
         }
 
-        private void CheckQuests()
+        private void EndOfRunQuestCheck()
         {
             byte[] stateMem = MemoryReader.ReadMemory("meridian", MemoryReader.ConstructPointer(oolStateAddress), true);
             if (stateMem != null)
@@ -165,15 +160,44 @@ namespace LiveSplit.UI.Components
                 int oolState = MemReaderUtil.ConvertMemory(stateMem, MemType.INT);
                 if (oolState == 12)
                 {
+                    runComplete = false;
                     byte[] questMem = MemoryReader.ReadMemory("meridian", MemoryReader.ConstructPointer(missedQuestsAddress), true);
                     if (questMem != null)
                     {
                         missedQuestsCount = MemReaderUtil.ConvertMemory(questMem, MemType.FLOAT);
                         bool missedQuests = missedQuestsCount > 0 ? true : false;
+                        if (runDetails.questMissed == Level.None && missedQuests) runDetails.questMissed = Level.CloudsBurst;
 
-                        runState = RunState.COUNTED;
-                        if (missedQuests) statusColor = Color.Red;
-                        else statusColor = Color.LimeGreen;
+                        if (!WebClient.SendRunToServer(runDetails))
+                        {
+                            runState = RunState.CANTVERIFY;
+                            statusColor = Color.Red;
+                        }
+                        else
+                        {
+                            runState = RunState.COUNTED;
+                            if (missedQuests) statusColor = Color.Red;
+                            else statusColor = Color.LimeGreen;
+                        }
+                    }
+                }
+            }
+        }
+
+        private void EndOfLevelQuestCheck()
+        {
+            if (runDetails.questMissed == Level.None)
+            {
+                byte[] questMem = MemoryReader.ReadMemory("meridian", MemoryReader.ConstructPointer(missedQuestsAddress), true);
+                if (questMem != null)
+                {
+                    missedQuestsCount = MemReaderUtil.ConvertMemory(questMem, MemType.FLOAT);
+                    bool missedQuests = missedQuestsCount > 0 ? true : false;
+                    if (missedQuests)
+                    {
+                        byte[] levelMem = MemoryReader.ReadMemory("meridian", MemoryReader.ConstructPointer(currentLevelAddress), true);
+                        int levelID = MemReaderUtil.ConvertMemory(levelMem, MemType.INT);
+                        runDetails.questMissed = (Level)(levelID - 1);
                     }
                 }
             }
@@ -204,20 +228,23 @@ namespace LiveSplit.UI.Components
 
         private void state_OnReset(object sender, TimerPhase e)
         {
-            runComplete = false;
             missedQuestsCount = 0;
             statusColor = Color.White;
             runState = RunState.WAITING;
+            runDetails.Clear();
         }
 
         private void state_OnSplit(Object sender, EventArgs e)
         {
-            if(CurrentState.CurrentPhase == TimerPhase.Ended && CurrentState.CurrentSplitIndex >= CurrentState.Run.Count && !runComplete)
+            if (CurrentState.CurrentPhase == TimerPhase.Ended && CurrentState.CurrentSplitIndex >= CurrentState.Run.Count && !runComplete)
             {
-                runComplete = true;
+                runDetails.completionDate = DateTime.Now;
+                runDetails.runTime = CurrentState.CurrentTime;
                 statusColor = Color.CadetBlue;
                 runState = RunState.FINISHED;
+                runComplete = true;
             }
+            else EndOfLevelQuestCheck();
         }
 
         private string SetInformationText()
@@ -237,7 +264,10 @@ namespace LiveSplit.UI.Components
                     else return "Run currently in progress...";
                 case RunState.FINISHED:
                     if (Settings.LiteMode) return "Complete! Counting Quests...";
-                    else return "Run Complete! Skip end cinema for final count."; ;
+                    else return "Run Complete! Skip end cinema for final count.";
+                case RunState.CANTVERIFY:
+                    if (Settings.LiteMode) return "Can't verify run!";
+                    else return "Can't verify run! Server unresponsive.";
                 case RunState.COUNTED:
                     if(missedQuestsCount > 0)
                     {

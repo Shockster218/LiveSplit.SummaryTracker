@@ -54,7 +54,10 @@
       <DependentUpon>QuestTrackerSettings.cs</DependentUpon>
     </Compile>
     <Compile Include="UI\Util\CurrentAutosplitter.cs" />
+    <Compile Include="UI\Util\Enumerations.cs" />
     <Compile Include="UI\Util\MemoryUtil.cs" />
+    <Compile Include="UI\Util\RunDetails.cs" />
+    <Compile Include="UI\Util\WebClient.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="UI\Components\QuestTrackerSettings.resx">
