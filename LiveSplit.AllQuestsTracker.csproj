@@ -53,6 +53,7 @@
     <Compile Include="UI\Components\QuestTrackerSettings.Designer.cs">
       <DependentUpon>QuestTrackerSettings.cs</DependentUpon>
     </Compile>
+    <Compile Include="UI\Util\Constants.cs" />
     <Compile Include="UI\Util\CurrentAutosplitter.cs" />
     <Compile Include="UI\Util\Enumerations.cs" />
     <Compile Include="UI\Util\MemoryUtil.cs" />

@@ -1,6 +1,7 @@
 ﻿public enum RunState
 {
     GAMENOTSTARTED,
+    STARTED,
     CRASHED,
     WAITING,
     RUNNING,
@@ -12,16 +13,16 @@
 public enum Level
 {
     DreamWorld,
-    AUP,
+    UnexpectedParty,
     RoastMutton,
     TrollHole,
     Overhill,
     Riddles,
     FliesAndSpiders,
     Barrels,
-    AWW,
+    WarmWelcome,
     InsideInfo,
-    GotC,
+    Gathering,
     CloudsBurst,
     None
 }
