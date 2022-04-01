@@ -5,13 +5,13 @@ using System.Xml;
 
 namespace LiveSplit.UI.Components
 {
-    public partial class QuestTrackerSettings : UserControl
+    public partial class SummaryTrackerSettings : UserControl
     {
         public string Username { get; set; }
         public bool LiteMode { get; set; }
         public bool AutoReset { get; set; }
         public LayoutMode Mode { get; set; }
-        public QuestTrackerSettings()
+        public SummaryTrackerSettings()
         {
             InitializeComponent();
             LiteMode = false;

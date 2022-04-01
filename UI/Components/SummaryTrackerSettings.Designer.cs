@@ -1,7 +1,7 @@
 ﻿
 namespace LiveSplit.UI.Components
 {
-    partial class QuestTrackerSettings
+    partial class SummaryTrackerSettings
     {
         /// <summary> 
         /// Required designer variable.

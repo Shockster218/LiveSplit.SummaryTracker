@@ -9,12 +9,12 @@ using System.Threading.Tasks;
 
 namespace LiveSplit.UI.Components
 {
-    public class QuestTrackerComponent : IComponent
+    public class SummaryTrackerComponent : IComponent
     {
-        public static QuestTrackerComponent instance { get; set; }
+        public static SummaryTrackerComponent instance { get; set; }
         protected InfoTextComponent InternalComponent { get; set; }
 
-        public QuestTrackerSettings Settings { get; set; }
+        public SummaryTrackerSettings Settings { get; set; }
 
         protected LiveSplitState CurrentState { get; set; }
 
@@ -40,7 +40,7 @@ namespace LiveSplit.UI.Components
 
         private RunDetails runDetails;
 
-        public string ComponentName => "The Hobbit - All Quests Tracker";
+        public string ComponentName => "The Hobbit - Summary Tracker";
 
         public float HorizontalWidth => InternalComponent.HorizontalWidth;
         public float MinimumWidth => InternalComponent.MinimumWidth;
@@ -54,10 +54,10 @@ namespace LiveSplit.UI.Components
 
         public IDictionary<string, Action> ContextMenuControls => null;
 
-        public QuestTrackerComponent(LiveSplitState state)
+        public SummaryTrackerComponent(LiveSplitState state)
         {
             instance = this;
-            Settings = new QuestTrackerSettings();
+            Settings = new SummaryTrackerSettings();
             InternalComponent = new InfoTextComponent("", null);
 
             MemoryReader = new MemoryReader();
@@ -68,6 +68,7 @@ namespace LiveSplit.UI.Components
             state.OnStart += state_OnStart;
             state.OnReset += state_OnReset;
             state.OnSplit += state_OnSplit;
+            
 
             Task.Factory.StartNew(() => ConnectToServer());
         }
@@ -107,7 +108,7 @@ namespace LiveSplit.UI.Components
             InternalComponent.NameLabel.ForeColor = state.LayoutSettings.TextColor;
             InternalComponent.ValueLabel.ForeColor = statusColor;
 
-            InternalComponent.NameLabel.Text = Settings.LiteMode ? "Hobbit AQ Tracker" : "The Hobbit - All Quests Tracker";
+            InternalComponent.NameLabel.Text = Settings.LiteMode ? "Summary Tracker" : "The Hobbit - Summary Tracker";
             InternalComponent.NameLabel.Text = connectedToServer ? InternalComponent.NameLabel.Text : $"OM {InternalComponent.NameLabel.Text}";
 
             runDetails.player = Settings.Username;
@@ -133,7 +134,6 @@ namespace LiveSplit.UI.Components
 
         public void Update(IInvalidator invalidator, LiveSplitState state, float width, float height, LayoutMode mode)
         {
-
             InternalComponent.InformationValue = SetInformationText();
             InternalComponent.Update(invalidator, state, width, height, mode);
 
@@ -157,11 +157,10 @@ namespace LiveSplit.UI.Components
                     if (stateMem != null)
                     {
                         int oolState = MemReaderUtil.ConvertMemory(stateMem, MemType.INT);
-                        if (oolState == 19 || oolState == 10)
+                        if (oolState == 6)
                         {
                             statusColor = Color.Gold;
                             SetRunState(RunState.RUNNING);
-                            CurrentAutosplitter.ActivateReset();
                         }
                     }
                 }
@@ -172,7 +171,6 @@ namespace LiveSplit.UI.Components
                     {
                         statusColor = Color.OrangeRed;
                         SetRunState(RunState.CRASHED);
-                        if (Settings.AutoReset) CurrentAutosplitter.DeactivateReset();
                     }
                     else
                     {
@@ -247,25 +245,6 @@ namespace LiveSplit.UI.Components
         {
             statusColor = Color.Gold;
             SetRunState(RunState.RUNNING);
-            if (CurrentAutosplitter.component == null)
-            {
-                foreach (IComponent c in CurrentState.Layout.Components)
-                {
-                    if (c.ComponentName == "Scriptable Auto Splitter")
-                    {
-                        CurrentAutosplitter.component = c;
-                        if (CurrentState.Run.IsAutoSplitterActive()) CurrentState.Run.AutoSplitter.Deactivate();
-                        break;
-                    }
-                }
-
-                if (CurrentState.Run.IsAutoSplitterActive())
-                {
-                    CurrentAutosplitter.component = CurrentState.Run.AutoSplitter.Component;
-                }
-            }
-            if (CurrentAutosplitter.component != null) CurrentAutosplitter.ActivateReset();
-
         }
 
         private void state_OnReset(object sender, TimerPhase e)

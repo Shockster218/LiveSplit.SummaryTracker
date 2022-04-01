@@ -3,17 +3,17 @@ using System;
 
 namespace LiveSplit.UI.Components
 {
-    public class QuestTrackerFactory : IComponentFactory
+    public class SummaryTrackerFactory : IComponentFactory
     {
         // The displayed name of the component in the Layout Editor.
-        public string ComponentName => "The Hobbit - All Quests Tracker";
+        public string ComponentName => "The Hobbit - Summary Tracker";
 
-        public string Description => "A tool for The Hobbit that verifies if All Quests have been successfully completed during the run.";
+        public string Description => "A tool for The Hobbit that helps verify if All Quests or 100% have been successfully completed during the run.";
 
         // The sub-menu this component will appear under when adding the component to the layout.
         public ComponentCategory Category => ComponentCategory.Control;
 
-        public IComponent Create(LiveSplitState state) => new QuestTrackerComponent(state);
+        public IComponent Create(LiveSplitState state) => new SummaryTrackerComponent(state);
 
         public string UpdateName => ComponentName;
 
