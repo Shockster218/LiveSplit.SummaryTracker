@@ -243,12 +243,14 @@ namespace LiveSplit.UI.Components
 
         private void state_OnStart(object sender, EventArgs e)
         {
+            if (CurrentState.Run.CategoryName == "All Quests") return;
             statusColor = Color.Gold;
             SetRunState(RunState.RUNNING);
         }
 
         private void state_OnReset(object sender, TimerPhase e)
         {
+            if (runState != RunState.RUNNING) return;
             missedQuest = false;
             statusColor = Color.White;
             SetRunState(RunState.WAITING);
@@ -257,6 +259,7 @@ namespace LiveSplit.UI.Components
 
         private void state_OnSplit(Object sender, EventArgs e)
         {
+            if (runState != RunState.RUNNING) return;
             if (CurrentState.CurrentPhase == TimerPhase.Ended && CurrentState.CurrentSplitIndex >= CurrentState.Run.Count && !runComplete)
             {
                 runDetails.completionDate = DateTime.Now;
