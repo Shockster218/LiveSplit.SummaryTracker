@@ -9,19 +9,16 @@ namespace LiveSplit.UI.Components
     {
         public string Username { get; set; }
         public bool LiteMode { get; set; }
-        public bool AutoReset { get; set; }
         public LayoutMode Mode { get; set; }
         public SummaryTrackerSettings()
         {
             InitializeComponent();
             LiteMode = false;
-            AutoReset = true;
         }
 
         private void QuestTrackerSettings_Load(object sender, EventArgs e)
         {
             Checkbox_LiteMode.DataBindings.Clear();
-            Checkbox_AutoReset.DataBindings.Clear();
             UsernameTB.DataBindings.Clear();
 
             if (Mode == LayoutMode.Horizontal)
@@ -33,14 +30,12 @@ namespace LiveSplit.UI.Components
                 Checkbox_LiteMode.DataBindings.Add("Checked", this, "LiteMode", false, DataSourceUpdateMode.OnPropertyChanged);
             }
 
-            Checkbox_AutoReset.DataBindings.Add("Checked", this, "AutoReset", false, DataSourceUpdateMode.OnPropertyChanged);
             UsernameTB.DataBindings.Add("Text", this, "Username");
         }
         private int CreateSettingsNode(XmlDocument document, XmlElement parent)
         {
             return SettingsHelper.CreateSetting(document, parent, "Version", Constants.Version) ^
                 SettingsHelper.CreateSetting(document, parent, "LiteMode", LiteMode) ^
-                SettingsHelper.CreateSetting(document, parent, "AutoReset", AutoReset) ^
                 SettingsHelper.CreateSetting(document, parent, "Username", Username);
         }
         public XmlNode GetSettings(XmlDocument document)
@@ -59,7 +54,6 @@ namespace LiveSplit.UI.Components
         {
             var element = (XmlElement)node;
             LiteMode = SettingsHelper.ParseBool(element["LiteMode"]);
-            AutoReset = SettingsHelper.ParseBool(element["AutoReset"]);
             Username = SettingsHelper.ParseString(element["Username"]);
         }
     }

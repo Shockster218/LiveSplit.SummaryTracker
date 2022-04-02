@@ -153,20 +153,12 @@ namespace LiveSplit.UI.Components
                 if (runState == RunState.GAMENOTSTARTED) runState = RunState.WAITING;
                 else if (runState == RunState.CRASHED)
                 {
-                    byte[] stateMem = MemoryReader.ReadMemory("meridian", MemoryReader.ConstructPointer(oolStateAddress), true);
-                    if (stateMem != null)
-                    {
-                        int oolState = MemReaderUtil.ConvertMemory(stateMem, MemType.INT);
-                        if (oolState == 6)
-                        {
-                            statusColor = Color.Gold;
-                            SetRunState(RunState.RUNNING);
-                        }
-                    }
+                    SetRunState(RunState.RUNNING);
                 }
 
                 if (processes.Length == 0)
                 {
+                    closed = true;
                     if (state.CurrentPhase == TimerPhase.Running)
                     {
                         statusColor = Color.OrangeRed;
@@ -177,7 +169,6 @@ namespace LiveSplit.UI.Components
                         statusColor = Color.White;
                         SetRunState(RunState.GAMENOTSTARTED);
                     }
-                    closed = true;
                 }
 
                 if (runComplete)
@@ -243,14 +234,13 @@ namespace LiveSplit.UI.Components
 
         private void state_OnStart(object sender, EventArgs e)
         {
-            if (CurrentState.Run.CategoryName == "All Quests") return;
+            if (CurrentState.Run.CategoryName != "All Quests") return;
             statusColor = Color.Gold;
             SetRunState(RunState.RUNNING);
         }
 
         private void state_OnReset(object sender, TimerPhase e)
         {
-            if (runState != RunState.RUNNING) return;
             missedQuest = false;
             statusColor = Color.White;
             SetRunState(RunState.WAITING);
