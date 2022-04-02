@@ -1,4 +1,4 @@
 ﻿public static class Constants
 {
-    public const string Version = "3.1";
+    public const string Version = "2.0.2";
 }
