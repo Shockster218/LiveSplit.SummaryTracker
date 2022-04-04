@@ -22,12 +22,6 @@ namespace LiveSplit.UI.Components
 
         private Color statusColor = Color.White;
 
-        private string missedQuestsAddress = "0x35C094";
-
-        private string oolStateAddress = "0x362B58";
-
-        private string currentLevelAddress = "0x362B5C";
-
         private bool closed;
 
         private bool runComplete;
@@ -153,6 +147,16 @@ namespace LiveSplit.UI.Components
                 if (runState == RunState.GAMENOTSTARTED) runState = RunState.WAITING;
                 else if (runState == RunState.CRASHED)
                 {
+                    byte[] levelMem = MemoryReader.ReadMemory("meridian", MemoryReader.ConstructPointer(Constants.CurrentLevelAddress), true);
+                    if (levelMem != null)
+                    {
+                        int level = MemReaderUtil.ConvertMemory(levelMem, MemType.INT);
+                        if (level > -1)
+                        {
+                            statusColor = Color.Gold;
+                            SetRunState(RunState.RUNNING);
+                        }
+                    }
                     SetRunState(RunState.RUNNING);
                 }
 
@@ -180,7 +184,7 @@ namespace LiveSplit.UI.Components
 
         private void EndOfRunQuestCheck()
         {
-            byte[] stateMem = MemoryReader.ReadMemory("meridian", MemoryReader.ConstructPointer(oolStateAddress), true);
+            byte[] stateMem = MemoryReader.ReadMemory("meridian", MemoryReader.ConstructPointer(Constants.OolStateAddress), true);
             if (stateMem != null)
             {
                 int oolState = MemReaderUtil.ConvertMemory(stateMem, MemType.INT);
@@ -189,7 +193,7 @@ namespace LiveSplit.UI.Components
                     runComplete = false;
                     if (!missedQuest)
                     {
-                        byte[] questMem = MemoryReader.ReadMemory("meridian", MemoryReader.ConstructPointer(missedQuestsAddress), true);
+                        byte[] questMem = MemoryReader.ReadMemory("meridian", MemoryReader.ConstructPointer(Constants.MissedQuestsAddress), true);
                         if (questMem != null)
                         {
                             int missedQuestsCount = MemReaderUtil.ConvertMemory(questMem, MemType.FLOAT);
@@ -217,14 +221,14 @@ namespace LiveSplit.UI.Components
         {
             if (runDetails.missedLevel == Level.None)
             {
-                byte[] questMem = MemoryReader.ReadMemory("meridian", MemoryReader.ConstructPointer(missedQuestsAddress), true);
+                byte[] questMem = MemoryReader.ReadMemory("meridian", MemoryReader.ConstructPointer(Constants.MissedQuestsAddress), true);
                 if (questMem != null)
                 {
                     int missedQuestsCount = MemReaderUtil.ConvertMemory(questMem, MemType.FLOAT);
                     missedQuest = missedQuestsCount > 0 ? true : false;
                     if (missedQuest)
                     {
-                        byte[] levelMem = MemoryReader.ReadMemory("meridian", MemoryReader.ConstructPointer(currentLevelAddress), true);
+                        byte[] levelMem = MemoryReader.ReadMemory("meridian", MemoryReader.ConstructPointer(Constants.CurrentLevelAddress), true);
                         int levelID = MemReaderUtil.ConvertMemory(levelMem, MemType.INT);
                         runDetails.missedLevel = (Level)(levelID - 1);
                     }
