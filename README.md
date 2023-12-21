@@ -6,7 +6,7 @@
 
    <h2>Installation</h2>
  1. Go to <a href="https://github.com/Shockster218/LiveSplit.SummaryTracker/releases">releases page</a> and download the latest LiveSplit.SummaryTracker.dll release.</br>
- 2. Navigate to your livesplit folder, then components folder and drop the downloaded file in there.</br>
+ 2. Navigate to the folder where you have livesplit installed, then components folder and drop the downloaded file in there.</br>
  3. Go to livesplit. Right click the window and then click edit layout. On the left, click the + button, find the control option, and then add The Hobbit - Summary Tracker component from there.</br>
  4. Go into the settings of the component and be sure to set a username in the username field!</br>
  5. You're all done!
