@@ -9,8 +9,9 @@
  2. Navigate to the folder where you have livesplit installed, then components folder and drop the downloaded file in there.</br>
  3. Open up livesplit. Right click the main window and then click edit layout. On the left, click the + button, find the control option from the list, and then add "The Hobbit - Summary Tracker" component from there.</br>
  4. Go into the settings of the component and be sure to set a username in the username field!</br>
- 5. Click Ok to save the username, then click Ok again to confirm the layout. You're all done!
- </br>
+ 5. Click Ok to save the username, then click Ok again to confirm the layout.</br>
+ 6. Lastly, right click the main window of livesplit and click "Edit Splits". Make sure the Game Name is set to "The Hobbit" and Run Category set to "All Quests". You're all set!
+</br>
  <br>
  It's also highly recommend to use this in conjunction with the All-In-One Autosplitter I made for the hobbit found <a href="https://github.com/Shockster218/Hobbit-PC-Autosplitter">here</a>.
  </br>
