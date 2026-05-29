@@ -1,38 +1,47 @@
 ﻿using LiveSplit.Model;
-using LiveSplit.UI.Util;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
-using System.Windows.Forms;
 using System.Threading.Tasks;
+using System.Windows.Forms;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.ListView;
 
 namespace LiveSplit.UI.Components
 {
     public class SummaryTrackerComponent : IComponent
     {
         public static SummaryTrackerComponent instance { get; set; }
+
         protected InfoTextComponent InternalComponent { get; set; }
 
         public SummaryTrackerSettings Settings { get; set; }
 
         protected LiveSplitState CurrentState { get; set; }
 
-        private MemoryReader MemoryReader { get; set; }
+        private MemoryReader memReader { get; set; }
+
+        public SimpleLabel InformationText { get; set; }
 
         private Color statusColor = Color.White;
 
-        private bool closed;
+        private bool setPlaying;
 
-        private bool runComplete;
+        private bool summaryFail;
 
-        private bool missedQuest;
+        private bool categoryMismatch;
 
-        private bool connectedToServer;
+        private bool hundredPercent;
+
+        private bool updateInformationText = true;
+
+        private int levelID = -1;
 
         private RunState runState = RunState.GAMENOTSTARTED;
 
-        private RunDetails runDetails;
+        private string runStatusText = String.Empty;
+
+        private Process game = null;
 
         public string ComponentName => "The Hobbit - Summary Tracker";
 
@@ -47,6 +56,7 @@ namespace LiveSplit.UI.Components
         public float PaddingRight => InternalComponent.PaddingRight;
 
         public IDictionary<string, Action> ContextMenuControls => null;
+        public int GetSettingsHashCode() => Settings.GetSettingsHashCode();
 
         public SummaryTrackerComponent(LiveSplitState state)
         {
@@ -54,24 +64,11 @@ namespace LiveSplit.UI.Components
             Settings = new SummaryTrackerSettings();
             InternalComponent = new InfoTextComponent("", null);
 
-            MemoryReader = new MemoryReader();
-            runDetails = new RunDetails("");
-
             CurrentState = state;
 
             state.OnStart += state_OnStart;
             state.OnReset += state_OnReset;
             state.OnSplit += state_OnSplit;
-            
-
-            Task.Factory.StartNew(() => ConnectToServer());
-        }
-
-        private async void ConnectToServer()
-        {
-            connectedToServer = await Task.Factory.StartNew(() => WebClient.CheckServerAlive()).Result;
-            if (!connectedToServer) MessageBox.Show("Can't connect to server, continuing in offline mode.");
-
         }
 
         public void DrawHorizontal(Graphics g, LiveSplitState state, float height, Region clipRegion)
@@ -88,24 +85,26 @@ namespace LiveSplit.UI.Components
 
         public void DrawVertical(Graphics g, LiveSplitState state, float width, Region clipRegion)
         {
-            InternalComponent.DisplayTwoRows = !Settings.LiteMode;
+            InternalComponent.DisplayTwoRows = true;
 
             InternalComponent.NameLabel.HasShadow
                 = InternalComponent.ValueLabel.HasShadow
                 = state.LayoutSettings.DropShadows;
 
-            InternalComponent.NameLabel.HorizontalAlignment = Settings.LiteMode ? StringAlignment.Near : StringAlignment.Center;
-            InternalComponent.ValueLabel.HorizontalAlignment = Settings.LiteMode ? StringAlignment.Far : StringAlignment.Center;
+            InternalComponent.NameLabel.HorizontalAlignment = StringAlignment.Center;
+            InternalComponent.ValueLabel.HorizontalAlignment = StringAlignment.Center;
             InternalComponent.NameLabel.VerticalAlignment = StringAlignment.Center;
             InternalComponent.ValueLabel.VerticalAlignment = StringAlignment.Center;
 
             InternalComponent.NameLabel.ForeColor = state.LayoutSettings.TextColor;
             InternalComponent.ValueLabel.ForeColor = statusColor;
 
-            InternalComponent.NameLabel.Text = Settings.LiteMode ? "Summary Tracker" : "The Hobbit - Summary Tracker";
-            InternalComponent.NameLabel.Text = connectedToServer ? InternalComponent.NameLabel.Text : $"OM {InternalComponent.NameLabel.Text}";
+            InternalComponent.NameLabel.Text = "The Hobbit - Summary Tracker";
 
-            runDetails.player = Settings.Username;
+            Font labelFont = InternalComponent.ValueLabel.Font;
+            Font font = new Font(labelFont.FontFamily, 15f, labelFont.Style, labelFont.Unit);
+
+            InternalComponent.ValueLabel.Font = font;
 
             InternalComponent.DrawVertical(g, state, width, clipRegion);
         }
@@ -128,182 +127,242 @@ namespace LiveSplit.UI.Components
 
         public void Update(IInvalidator invalidator, LiveSplitState state, float width, float height, LayoutMode mode)
         {
-            InternalComponent.InformationValue = SetInformationText();
-            InternalComponent.Update(invalidator, state, width, height, mode);
-
-            Process[] processes = Process.GetProcessesByName("meridian");
-            if (closed && processes.Length > 0)
+            if (updateInformationText) 
             {
-                runComplete = false;
-                closed = false;
-                if (runState != RunState.CRASHED)
+                InternalComponent.InformationValue = GetInformationText();
+                InternalComponent.Update(invalidator, state, width, height, mode);
+                updateInformationText = false;
+
+                if (setPlaying)
                 {
-                    statusColor = Color.White;
-                    SetRunState(RunState.WAITING);
+                    Task.Run(async () => 
+                    { 
+                        await Task.Delay(2000);
+                        SetRunState(RunState.PLAYING);
+                    });
                 }
+            }
+
+            if(game == null)
+            {
+                if (runState != RunState.GAMENOTSTARTED) SetRunState(RunState.GAMENOTSTARTED);
+                Process[] processes = Process.GetProcessesByName("meridian");
+                game = processes.Length > 0 ? processes[0] : null;
+                return;
+            }
+
+            memReader = new MemoryReader("meridian");
+
+            if (CurrentState.CurrentPhase == TimerPhase.Running && memReader.ReadAddressInt(MemoryAddress.LevelQueued) != -1 && GetLevelIndex() < levelID)
+            {
+                Settings.SetDetails(String.Empty);
+                SetRunState(RunState.LOADED);
+                levelID = GetLevelIndex();
+            }
+
+            if (runState == RunState.FINISHED && FinalSummaryUpdater()) SummaryCheck();
+
+            if (runState == RunState.FAILED) return;
+
+            if (runState == RunState.MISMATCH) return;
+
+            if (runState == RunState.GAMENOTSTARTED) SetRunState(RunState.WAITING);
+            
+            if (runState == RunState.CLOSED && GetLevelIndex() == levelID) SetRunState(RunState.LOADED);
+
+            if (!game.Responding || game.HasExited || game == null)
+            {
+                game = null;
+                if (state.CurrentPhase == TimerPhase.Running) SetRunState(RunState.CLOSED);
+                else SetRunState(RunState.GAMENOTSTARTED);
+            }
+        }
+
+        private int GetLevelIndex()
+        {
+            return memReader.ReadAddressInt(MemoryAddress.CurrentLevelAddress);
+        }
+
+        private String GetLevelName(bool previous)
+        {
+            int levelIndex = GetLevelIndex();
+            levelIndex = previous ? levelIndex - 1 : levelIndex;
+
+            switch (levelIndex)
+            {
+                case 0:
+                    return "Dream World";
+                case 1:
+                    return "An Unexpected Party";
+                case 2:
+                    return "Roast Mutton";
+                case 3:
+                    return "Troll-Hole";
+                case 4:
+                    return "Overhill and Underhill";
+                case 5:
+                    return "Riddles in the Dark";
+                case 6:
+                    return "Flies and Spiders";
+                case 7:
+                    return "Barrels out of Bond";
+                case 8:
+                    return "A Warm Welcome";
+                case 9:
+                    return "Inside Information";
+                case 10:
+                    return "Gathering of the Clouds";
+                default:
+                    return "Clouds Burst";
+            }
+        }
+
+        private void SummaryCheck()
+        {
+            float missedQuestsCount = 0;
+            float missedSPCount = 0;
+            float missedCourageCount = 0;
+            float missedChestCount = 0;
+
+            missedQuestsCount += memReader.ReadAddressFloat(MemoryAddress.MissedQuestsAddress);
+
+            if (hundredPercent)
+            {
+                missedSPCount += memReader.ReadAddressFloat(MemoryAddress.MissedSilverPenniesAddress);
+                missedCourageCount += memReader.ReadAddressFloat(MemoryAddress.MissedCourageAddress);
+                missedChestCount += memReader.ReadAddressFloat(MemoryAddress.MissedChestAddress);
+
+                // Dream world quests check for hundo
+                if (GetLevelIndex() == 1) 
+                {
+                    if (memReader.ReadAddressInt(MemoryAddress.QuestOneAddress) == 0) missedQuestsCount++;
+                    if (memReader.ReadAddressInt(MemoryAddress.QuestThreeAddress) == 0) missedQuestsCount++;
+                    if (memReader.ReadAddressInt(MemoryAddress.QuestFiveAddress) == 0) missedQuestsCount++;
+                    if (memReader.ReadAddressInt(MemoryAddress.QuestSevenAddress) == 0) missedQuestsCount++;
+                }
+            }
+
+            summaryFail = missedQuestsCount > 0 || missedSPCount > 0 || missedCourageCount > 0 || missedChestCount > 0 ? true : false;
+
+            if (summaryFail)
+            {
+                string details = $"Time: {DateTime.Now.ToString("h:mm:ss tt")}\n" +
+                                 $"Level: {GetLevelName(previous:true)}\n" +
+                                 $"Quests Missed: {missedQuestsCount}\n";
+
+                if (hundredPercent)
+                {
+                    details += $"Silver Pennies Missed: {missedSPCount}\n" +
+                               $"Courage Points Missed: {missedCourageCount}\n" +
+                               $"Chests Missed: {missedChestCount}"; 
+                }
+
+                Settings.SetDetails(details);
+                SetRunState(RunState.FAILED);
             }
             else
             {
-                if (runState == RunState.GAMENOTSTARTED) runState = RunState.WAITING;
-                else if (runState == RunState.CRASHED)
+                if (runState == RunState.FINISHED) SetRunState(RunState.SUCCESS);
+                else
                 {
-                    byte[] levelMem = MemoryReader.ReadMemory("meridian", MemoryReader.ConstructPointer(Constants.CurrentLevelAddress), true);
-                    if (levelMem != null)
+                    if (CurrentState.CurrentPhase == TimerPhase.Ended)
                     {
-                        int level = MemReaderUtil.ConvertMemory(levelMem, MemType.INT);
-                        if (level > -1)
-                        {
-                            statusColor = Color.Gold;
-                            SetRunState(RunState.RUNNING);
-                        }
-                    }
-                    SetRunState(RunState.RUNNING);
-                }
-
-                if (processes.Length == 0)
-                {
-                    closed = true;
-                    if (state.CurrentPhase == TimerPhase.Running)
-                    {
-                        statusColor = Color.OrangeRed;
-                        SetRunState(RunState.CRASHED);
+                        SetRunState(RunState.FINISHED);
                     }
                     else
                     {
-                        statusColor = Color.White;
-                        SetRunState(RunState.GAMENOTSTARTED);
+                        SetRunState(RunState.SPLIT);
                     }
                 }
-
-                if (runComplete)
-                {
-                    EndOfRunQuestCheck();
-                }
             }
+
+            levelID = GetLevelIndex();
         }
 
-        private void EndOfRunQuestCheck()
+        private bool FinalSummaryUpdater()
         {
-            byte[] stateMem = MemoryReader.ReadMemory("meridian", MemoryReader.ConstructPointer(Constants.OolStateAddress), true);
-            if (stateMem != null)
-            {
-                int oolState = MemReaderUtil.ConvertMemory(stateMem, MemType.INT);
-                if (oolState == 12)
-                {
-                    runComplete = false;
-                    if (!missedQuest)
-                    {
-                        byte[] questMem = MemoryReader.ReadMemory("meridian", MemoryReader.ConstructPointer(Constants.MissedQuestsAddress), true);
-                        if (questMem != null)
-                        {
-                            int missedQuestsCount = MemReaderUtil.ConvertMemory(questMem, MemType.FLOAT);
-                            missedQuest = missedQuestsCount > 0 ? true : false;
-                            if (runDetails.missedLevel == Level.None && missedQuest) runDetails.missedLevel = Level.CloudsBurst;
-                        }
-                    }
-
-                    if (!WebClient.SendRunToServer(runDetails))
-                    {
-                        runState = RunState.CANTVERIFY;
-                        statusColor = Color.Red;
-                    }
-                    else
-                    {
-                        runState = RunState.COUNTED;
-                        if (missedQuest) statusColor = Color.Red;
-                        else statusColor = Color.LimeGreen;
-                    }
-                }
-            }
-        }
-
-        private void EndOfLevelQuestCheck()
-        {
-            if (runDetails.missedLevel == Level.None)
-            {
-                byte[] questMem = MemoryReader.ReadMemory("meridian", MemoryReader.ConstructPointer(Constants.MissedQuestsAddress), true);
-                if (questMem != null)
-                {
-                    int missedQuestsCount = MemReaderUtil.ConvertMemory(questMem, MemType.FLOAT);
-                    missedQuest = missedQuestsCount > 0 ? true : false;
-                    if (missedQuest)
-                    {
-                        byte[] levelMem = MemoryReader.ReadMemory("meridian", MemoryReader.ConstructPointer(Constants.CurrentLevelAddress), true);
-                        int levelID = MemReaderUtil.ConvertMemory(levelMem, MemType.INT);
-                        runDetails.missedLevel = (Level)(levelID - 1);
-                    }
-                }
-            }
+            return memReader.ReadAddressInt(MemoryAddress.OolStateAddress) == 12;
         }
 
         private void state_OnStart(object sender, EventArgs e)
         {
-            if (CurrentState.Run.CategoryName != "All Quests") return;
-            statusColor = Color.Gold;
-            SetRunState(RunState.RUNNING);
+            if(CurrentState.Run.CategoryName == Settings.Category)
+            {
+                if (Settings.Category == "100%") hundredPercent = true;
+                else hundredPercent = false;
+                SetRunState(RunState.STARTED);
+            }
+            else SetRunState(RunState.MISMATCH);
         }
 
         private void state_OnReset(object sender, TimerPhase e)
         {
-            missedQuest = false;
-            statusColor = Color.White;
-            SetRunState(RunState.WAITING);
-            runDetails.Clear();
+            summaryFail = false;
+            categoryMismatch = false;
+            levelID = -1;
+            SetRunState(RunState.WAITING, forceReset:true);
         }
 
         private void state_OnSplit(Object sender, EventArgs e)
         {
-            if (runState != RunState.RUNNING) return;
-            if (CurrentState.CurrentPhase == TimerPhase.Ended && CurrentState.CurrentSplitIndex >= CurrentState.Run.Count && !runComplete)
-            {
-                runDetails.completionDate = DateTime.Now;
-                runDetails.runTime = CurrentState.CurrentTime;
-                statusColor = Color.CadetBlue;
-                SetRunState(RunState.FINISHED);
-                runComplete = true;
-            }
-            else EndOfLevelQuestCheck();
+            if (runState != RunState.PLAYING || runState == RunState.FAILED) return;
+            SummaryCheck();
         }
 
-        private void SetRunState(RunState state)
+        private void SetRunState(RunState _state, bool forceReset = false)
         {
-            if (runState == RunState.GAMENOTSTARTED && state != RunState.STARTED) return;
-            runState = state;
+            if (runState == RunState.CLOSED && _state != RunState.LOADED && !forceReset) return;
+            runState = _state;
+            updateInformationText = true;
         }
 
-        private string SetInformationText()
+        private string GetInformationText()
         {
             switch (runState)
             {
                 case RunState.GAMENOTSTARTED:
-                    return "-";
+                    statusColor = Color.BurlyWood;
+                    return "Waiting for game...";
                 case RunState.WAITING:
+                    statusColor = Color.Coral;
+                    return "Press \"New Game\" to start";
+                case RunState.MISMATCH:
+                    statusColor = Color.Red;
+                    categoryMismatch = true;
+                    return "Failed to start, category mismatch";
                 case RunState.STARTED:
-                    if (Settings.LiteMode) return "Waiting...";
-                    else return "Waiting for run to start...";
-                case RunState.CRASHED:
-                    if (Settings.LiteMode) return "In progress...";
-                    else return "Game crash detected, run still in progress...";
-                case RunState.RUNNING:
-                    if (Settings.LiteMode) return "In progress...";
-                    else return "Run currently in progress...";
+                    statusColor = Color.Green;
+                    setPlaying = true;
+                    return "Tracker now active. Goodluck!";
+                case RunState.PLAYING:
+                    statusColor = Color.Gold;
+                    setPlaying = false;
+                    runStatusText = $"Level in progress... [{GetLevelIndex() + 1}/12]";
+                    return runStatusText;
+                case RunState.CLOSED:
+                    statusColor = Color.OrangeRed;
+                    return "Game closed. Load save to continue.";
+                case RunState.LOADED:
+                    statusColor = Color.Green;
+                    setPlaying = true;
+                    summaryFail = false;
+                    return $"Loaded back to {GetLevelName(previous:false)}";
+                case RunState.SPLIT:
+                    statusColor = Color.Green;
+                    setPlaying = true;
+                    return $"{GetLevelName(previous:true)} \u2713";
                 case RunState.FINISHED:
-                    if (Settings.LiteMode) return "Complete! Counting Quests...";
-                    else return "Run Complete! Skip end cinema for final count.";
-                case RunState.CANTVERIFY:
-                    if (Settings.LiteMode) return "Can't verify run!";
-                    else return "Can't verify run! Server unresponsive.";
-                case RunState.COUNTED:
-                    if (missedQuest)
-                    {
-                        if (Settings.LiteMode) return $"Missed quest in {runDetails.missedLevel.ToString()}";
-                        else return $"Run Invalid, missed quest in {runDetails.missedLevel.ToString()}";
-                    }
-                    else
-                    {
-                        if (Settings.LiteMode) return "All Quests Finished!";
-                        else return "Congratulations, All Quests have been successfully finished!";
-                    }
+                    statusColor = Color.Cyan;
+                    return "Run complete! Waiting for summary.";
+                case RunState.SUCCESS:
+                    statusColor = Color.LawnGreen;
+                    return "Summary completed! GGs";
+                case RunState.FAILED:
+                    statusColor = Color.Crimson;
+                    return $"Summary failed. See log for info.";
+                case RunState.CANTREAD:
+                    statusColor = Color.OrangeRed;
+                    return "Can't read game memory. Restart Game and Livesplit";
                 default:
                     return "-";
             }
@@ -315,7 +374,5 @@ namespace LiveSplit.UI.Components
             CurrentState.OnReset -= state_OnReset;
             CurrentState.OnSplit -= state_OnSplit;
         }
-
-        public int GetSettingsHashCode() => Settings.GetSettingsHashCode();
     }
 }
