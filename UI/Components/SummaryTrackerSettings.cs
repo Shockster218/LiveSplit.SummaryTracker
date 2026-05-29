@@ -7,36 +7,27 @@ namespace LiveSplit.UI.Components
 {
     public partial class SummaryTrackerSettings : UserControl
     {
-        public string Username { get; set; }
-        public bool LiteMode { get; set; }
-        public LayoutMode Mode { get; set; }
+        public LayoutMode Mode { get; set;}
+        public String Category { get; set; }
+        public String Details { get; set; }
         public SummaryTrackerSettings()
         {
             InitializeComponent();
-            LiteMode = false;
         }
-
         private void QuestTrackerSettings_Load(object sender, EventArgs e)
         {
-            Checkbox_LiteMode.DataBindings.Clear();
-            UsernameTB.DataBindings.Clear();
+            categoryComboBox.DataBindings.Clear();
+            detailsLabel.DataBindings.Clear();
 
-            if (Mode == LayoutMode.Horizontal)
-            {
-                Checkbox_LiteMode.Enabled = false;
-            }
-            else
-            {
-                Checkbox_LiteMode.DataBindings.Add("Checked", this, "LiteMode", false, DataSourceUpdateMode.OnPropertyChanged);
-            }
+            categoryComboBox.DataBindings.Add("SelectedItem", this, "Category", false, DataSourceUpdateMode.OnPropertyChanged);
 
-            UsernameTB.DataBindings.Add("Text", this, "Username");
+            detailsLabel.DataBindings.Add("Text", this, "Details");
         }
         private int CreateSettingsNode(XmlDocument document, XmlElement parent)
         {
             return SettingsHelper.CreateSetting(document, parent, "Version", Constants.Version) ^
-                SettingsHelper.CreateSetting(document, parent, "LiteMode", LiteMode) ^
-                SettingsHelper.CreateSetting(document, parent, "Username", Username);
+            SettingsHelper.CreateSetting(document, parent, "Category", categoryComboBox.SelectedItem) ^
+            SettingsHelper.CreateSetting(document, parent, "Details", detailsLabel.Text);
         }
         public XmlNode GetSettings(XmlDocument document)
         {
@@ -53,8 +44,14 @@ namespace LiveSplit.UI.Components
         public void SetSettings(XmlNode node)
         {
             var element = (XmlElement)node;
-            LiteMode = SettingsHelper.ParseBool(element["LiteMode"]);
-            Username = SettingsHelper.ParseString(element["Username"]);
+            Category = SettingsHelper.ParseString(element["Category"]);
+            if (Category == String.Empty) Category = "All Quests";
+            Details = SettingsHelper.ParseString(element["Details"]);
+        }
+
+        public void SetDetails(string _details)
+        {
+            Details = _details;
         }
     }
 }

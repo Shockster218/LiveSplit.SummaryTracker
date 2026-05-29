@@ -30,98 +30,120 @@ namespace LiveSplit.UI.Components
         private void InitializeComponent()
         {
             this.topLevelLayoutPanel = new System.Windows.Forms.TableLayoutPanel();
-            this.Settings_Groupbox = new System.Windows.Forms.GroupBox();
-            this.UsernameDesc = new System.Windows.Forms.Label();
-            this.UsernameTitle = new System.Windows.Forms.Label();
-            this.UsernameTB = new System.Windows.Forms.TextBox();
-            this.LiteMode_Desc = new System.Windows.Forms.Label();
-            this.Checkbox_LiteMode = new System.Windows.Forms.CheckBox();
+            this.categoryLayoutPanel = new System.Windows.Forms.TableLayoutPanel();
+            this.categoryLabel = new System.Windows.Forms.Label();
+            this.categoryComboBox = new System.Windows.Forms.ComboBox();
+            this.logLayoutPanel = new System.Windows.Forms.TableLayoutPanel();
+            this.logHeaderLabel = new System.Windows.Forms.Label();
+            this.detailsLabel = new System.Windows.Forms.Label();
             this.topLevelLayoutPanel.SuspendLayout();
-            this.Settings_Groupbox.SuspendLayout();
+            this.categoryLayoutPanel.SuspendLayout();
+            this.logLayoutPanel.SuspendLayout();
             this.SuspendLayout();
             // 
             // topLevelLayoutPanel
             // 
             this.topLevelLayoutPanel.AutoSize = true;
             this.topLevelLayoutPanel.ColumnCount = 1;
-            this.topLevelLayoutPanel.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
-            this.topLevelLayoutPanel.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
-            this.topLevelLayoutPanel.Controls.Add(this.Settings_Groupbox, 0, 0);
+            this.topLevelLayoutPanel.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            this.topLevelLayoutPanel.Controls.Add(this.categoryLayoutPanel, 0, 0);
+            this.topLevelLayoutPanel.Controls.Add(this.logLayoutPanel, 0, 1);
+            this.topLevelLayoutPanel.Dock = System.Windows.Forms.DockStyle.Fill;
             this.topLevelLayoutPanel.Location = new System.Drawing.Point(0, 0);
             this.topLevelLayoutPanel.Name = "topLevelLayoutPanel";
-            this.topLevelLayoutPanel.RowCount = 1;
-            this.topLevelLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50F));
-            this.topLevelLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50F));
-            this.topLevelLayoutPanel.Size = new System.Drawing.Size(471, 302);
+            this.topLevelLayoutPanel.RowCount = 2;
+            this.topLevelLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 30F));
+            this.topLevelLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 70F));
+            this.topLevelLayoutPanel.Size = new System.Drawing.Size(478, 376);
             this.topLevelLayoutPanel.TabIndex = 0;
             // 
-            // Settings_Groupbox
+            // categoryLayoutPanel
             // 
-            this.Settings_Groupbox.Controls.Add(this.UsernameDesc);
-            this.Settings_Groupbox.Controls.Add(this.UsernameTitle);
-            this.Settings_Groupbox.Controls.Add(this.UsernameTB);
-            this.Settings_Groupbox.Controls.Add(this.LiteMode_Desc);
-            this.Settings_Groupbox.Controls.Add(this.Checkbox_LiteMode);
-            this.Settings_Groupbox.Location = new System.Drawing.Point(3, 3);
-            this.Settings_Groupbox.Name = "Settings_Groupbox";
-            this.Settings_Groupbox.Size = new System.Drawing.Size(465, 296);
-            this.Settings_Groupbox.TabIndex = 0;
-            this.Settings_Groupbox.TabStop = false;
-            this.Settings_Groupbox.Text = "Settings";
+            this.categoryLayoutPanel.AutoSize = true;
+            this.categoryLayoutPanel.ColumnCount = 2;
+            this.categoryLayoutPanel.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
+            this.categoryLayoutPanel.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
+            this.categoryLayoutPanel.Controls.Add(this.categoryLabel, 0, 0);
+            this.categoryLayoutPanel.Controls.Add(this.categoryComboBox, 1, 0);
+            this.categoryLayoutPanel.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.categoryLayoutPanel.Location = new System.Drawing.Point(3, 3);
+            this.categoryLayoutPanel.Name = "categoryLayoutPanel";
+            this.categoryLayoutPanel.RowCount = 1;
+            this.categoryLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50F));
+            this.categoryLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50F));
+            this.categoryLayoutPanel.Size = new System.Drawing.Size(472, 106);
+            this.categoryLayoutPanel.TabIndex = 0;
             // 
-            // UsernameDesc
+            // categoryLabel
             // 
-            this.UsernameDesc.AutoSize = true;
-            this.UsernameDesc.Font = new System.Drawing.Font("Titillium Web", 9.749999F, System.Drawing.FontStyle.Italic, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.UsernameDesc.Location = new System.Drawing.Point(47, 65);
-            this.UsernameDesc.MaximumSize = new System.Drawing.Size(420, 0);
-            this.UsernameDesc.Name = "UsernameDesc";
-            this.UsernameDesc.Size = new System.Drawing.Size(406, 40);
-            this.UsernameDesc.TabIndex = 6;
-            this.UsernameDesc.Text = "Set your username so the verifiers can easily determine who\'s run they are lookin" +
-    "g at.";
+            this.categoryLabel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
+            this.categoryLabel.AutoSize = true;
+            this.categoryLabel.Font = new System.Drawing.Font("Titillium Web SemiBold", 15.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.categoryLabel.Location = new System.Drawing.Point(3, 37);
+            this.categoryLabel.Name = "categoryLabel";
+            this.categoryLabel.Size = new System.Drawing.Size(230, 32);
+            this.categoryLabel.TabIndex = 0;
+            this.categoryLabel.Text = "Choose Category";
+            this.categoryLabel.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
-            // UsernameTitle
+            // categoryComboBox
             // 
-            this.UsernameTitle.AutoSize = true;
-            this.UsernameTitle.Font = new System.Drawing.Font("Titillium Web SemiBold", 9.749999F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.UsernameTitle.Location = new System.Drawing.Point(15, 35);
-            this.UsernameTitle.Name = "UsernameTitle";
-            this.UsernameTitle.Size = new System.Drawing.Size(70, 20);
-            this.UsernameTitle.TabIndex = 5;
-            this.UsernameTitle.Text = "Username:";
+            this.categoryComboBox.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
+            this.categoryComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.categoryComboBox.Font = new System.Drawing.Font("Titillium Web SemiBold", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.categoryComboBox.FormattingEnabled = true;
+            this.categoryComboBox.Items.AddRange(new object[] {
+            "All Quests",
+            "100%",
+            "ARQ Glitchless"});
+            this.categoryComboBox.Location = new System.Drawing.Point(239, 37);
+            this.categoryComboBox.Name = "categoryComboBox";
+            this.categoryComboBox.Size = new System.Drawing.Size(230, 32);
+            this.categoryComboBox.TabIndex = 7;
             // 
-            // UsernameTB
+            // logLayoutPanel
             // 
-            this.UsernameTB.Font = new System.Drawing.Font("Titillium Web SemiBold", 9.749999F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.UsernameTB.Location = new System.Drawing.Point(91, 32);
-            this.UsernameTB.MaxLength = 25;
-            this.UsernameTB.Name = "UsernameTB";
-            this.UsernameTB.Size = new System.Drawing.Size(174, 27);
-            this.UsernameTB.TabIndex = 4;
+            this.logLayoutPanel.AutoSize = true;
+            this.logLayoutPanel.ColumnCount = 1;
+            this.logLayoutPanel.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            this.logLayoutPanel.Controls.Add(this.logHeaderLabel, 0, 0);
+            this.logLayoutPanel.Controls.Add(this.detailsLabel, 0, 1);
+            this.logLayoutPanel.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.logLayoutPanel.Location = new System.Drawing.Point(3, 115);
+            this.logLayoutPanel.Name = "logLayoutPanel";
+            this.logLayoutPanel.RowCount = 2;
+            this.logLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 40F));
+            this.logLayoutPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            this.logLayoutPanel.Size = new System.Drawing.Size(472, 258);
+            this.logLayoutPanel.TabIndex = 1;
             // 
-            // LiteMode_Desc
+            // logHeaderLabel
             // 
-            this.LiteMode_Desc.AutoSize = true;
-            this.LiteMode_Desc.Font = new System.Drawing.Font("Titillium Web", 9.749999F, System.Drawing.FontStyle.Italic, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.LiteMode_Desc.Location = new System.Drawing.Point(47, 139);
-            this.LiteMode_Desc.MaximumSize = new System.Drawing.Size(420, 0);
-            this.LiteMode_Desc.Name = "LiteMode_Desc";
-            this.LiteMode_Desc.Size = new System.Drawing.Size(409, 40);
-            this.LiteMode_Desc.TabIndex = 1;
-            this.LiteMode_Desc.Text = "Lite mode displays minimal information all in 1 row; for those who need as much s" +
-    "pace as possible on their layout.";
+            this.logHeaderLabel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
+            this.logHeaderLabel.AutoSize = true;
+            this.logHeaderLabel.Font = new System.Drawing.Font("Titillium Web", 15.75F, ((System.Drawing.FontStyle)(((System.Drawing.FontStyle.Bold | System.Drawing.FontStyle.Italic) 
+                | System.Drawing.FontStyle.Underline))), System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.logHeaderLabel.Location = new System.Drawing.Point(3, 4);
+            this.logHeaderLabel.Name = "logHeaderLabel";
+            this.logHeaderLabel.Size = new System.Drawing.Size(466, 32);
+            this.logHeaderLabel.TabIndex = 0;
+            this.logHeaderLabel.Text = "Last Failed Run Log";
+            this.logHeaderLabel.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
-            // Checkbox_LiteMode
+            // detailsLabel
             // 
-            this.Checkbox_LiteMode.AutoSize = true;
-            this.Checkbox_LiteMode.Font = new System.Drawing.Font("Titillium Web SemiBold", 9.749999F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.Checkbox_LiteMode.Location = new System.Drawing.Point(15, 116);
-            this.Checkbox_LiteMode.Name = "Checkbox_LiteMode";
-            this.Checkbox_LiteMode.Size = new System.Drawing.Size(84, 24);
-            this.Checkbox_LiteMode.TabIndex = 0;
-            this.Checkbox_LiteMode.Text = "Lite Mode";
-            this.Checkbox_LiteMode.UseVisualStyleBackColor = true;
+            this.detailsLabel.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.detailsLabel.AutoSize = true;
+            this.detailsLabel.Font = new System.Drawing.Font("Titillium Web SemiBold", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.detailsLabel.ImageAlign = System.Drawing.ContentAlignment.TopLeft;
+            this.detailsLabel.Location = new System.Drawing.Point(3, 40);
+            this.detailsLabel.Name = "detailsLabel";
+            this.detailsLabel.Padding = new System.Windows.Forms.Padding(25);
+            this.detailsLabel.Size = new System.Drawing.Size(466, 218);
+            this.detailsLabel.TabIndex = 1;
+            this.detailsLabel.Text = "Nothing to Display";
             // 
             // SummaryTrackerSettings
             // 
@@ -130,11 +152,14 @@ namespace LiveSplit.UI.Components
             this.AutoSize = true;
             this.Controls.Add(this.topLevelLayoutPanel);
             this.Name = "SummaryTrackerSettings";
-            this.Size = new System.Drawing.Size(474, 305);
+            this.Size = new System.Drawing.Size(478, 376);
             this.Load += new System.EventHandler(this.QuestTrackerSettings_Load);
             this.topLevelLayoutPanel.ResumeLayout(false);
-            this.Settings_Groupbox.ResumeLayout(false);
-            this.Settings_Groupbox.PerformLayout();
+            this.topLevelLayoutPanel.PerformLayout();
+            this.categoryLayoutPanel.ResumeLayout(false);
+            this.categoryLayoutPanel.PerformLayout();
+            this.logLayoutPanel.ResumeLayout(false);
+            this.logLayoutPanel.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -143,11 +168,11 @@ namespace LiveSplit.UI.Components
         #endregion
 
         private System.Windows.Forms.TableLayoutPanel topLevelLayoutPanel;
-        private System.Windows.Forms.GroupBox Settings_Groupbox;
-        private System.Windows.Forms.CheckBox Checkbox_LiteMode;
-        private System.Windows.Forms.Label LiteMode_Desc;
-        private System.Windows.Forms.Label UsernameTitle;
-        private System.Windows.Forms.TextBox UsernameTB;
-        private System.Windows.Forms.Label UsernameDesc;
+        private System.Windows.Forms.TableLayoutPanel categoryLayoutPanel;
+        private System.Windows.Forms.Label categoryLabel;
+        private System.Windows.Forms.ComboBox categoryComboBox;
+        private System.Windows.Forms.TableLayoutPanel logLayoutPanel;
+        private System.Windows.Forms.Label logHeaderLabel;
+        private System.Windows.Forms.Label detailsLabel;
     }
 }
