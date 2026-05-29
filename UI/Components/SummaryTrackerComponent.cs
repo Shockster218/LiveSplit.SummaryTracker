@@ -306,7 +306,7 @@ namespace LiveSplit.UI.Components
         private void state_OnSplit(Object sender, EventArgs e)
         {
             if (runState != RunState.PLAYING || runState == RunState.FAILED) return;
-            SummaryCheck();
+            Task.Run(() => SummaryCheck());
         }
 
         private void SetRunState(RunState _state, bool forceReset = false)
